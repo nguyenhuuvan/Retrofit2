@@ -12,6 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
+        <activity android:name=".ui.EmployeeActivity"></activity>
         <activity android:name=".ui.EditEmployeeActivity" />
         <activity android:name=".ui.CreatEmployeeActivity" />
         <activity android:name=".ui.ListEmployeeActivity">

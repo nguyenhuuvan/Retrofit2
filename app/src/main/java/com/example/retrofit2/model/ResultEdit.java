@@ -43,4 +43,13 @@ public class ResultEdit {
     public void setAge(int age) {
         this.age = age;
     }
+
+    @Override
+    public String toString() {
+        return "ResultEdit{" +
+                "name='" + name + '\'' +
+                ", salary=" + salary +
+                ", age=" + age +
+                '}';
+    }
 }

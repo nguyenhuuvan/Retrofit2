@@ -5,38 +5,44 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import com.example.retrofit2.APIService;
+import com.example.retrofit2.retrofit.APIService;
 import com.example.retrofit2.R;
+import com.example.retrofit2.retrofit.APIUtils;
 import com.example.retrofit2.model.Request_Creat_Update;
-import com.example.retrofit2.model.ResultCreat;
 import com.example.retrofit2.model.ResultEdit;
 import com.google.android.material.textfield.TextInputEditText;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class EditEmployeeActivity extends AppCompatActivity {
     private TextInputEditText edName;
     private TextInputEditText edSalary;
     private TextInputEditText edAge;
+    private APIService service;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_employee);
 
-        edName = findViewById(R.id.edName);
-        edSalary =  findViewById(R.id.edSalary);
-        edAge =  findViewById(R.id.edAge);
+        initView();
 
         edAge.setText(getIntent().getExtras().getInt("age")+"");
         edName.setText(getIntent().getExtras().getString("name"));
         edSalary.setText(getIntent().getExtras().getInt("salary")+"");
+
+        service = APIUtils.getData();
+    }
+
+    private void initView() {
+        edName = findViewById(R.id.edName);
+        edSalary =  findViewById(R.id.edSalary);
+        edAge =  findViewById(R.id.edAge);
     }
 
     public void edit(View view) {
@@ -52,20 +58,23 @@ public class EditEmployeeActivity extends AppCompatActivity {
             if(age.isEmpty())
                 edAge.setError("Mời nhập age");
         }else{
-            Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl("http://dummy.restapiexample.com/")
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
-            APIService service = retrofit.create(APIService.class);
             Call<ResultEdit> call = service.updateEmployee(new Request_Creat_Update(name,Integer.parseInt(salary),Integer.parseInt(age)),getIntent().getExtras().getInt("id"));
             call.enqueue(new Callback<ResultEdit>() {
                 @Override
                 public void onResponse(Call<ResultEdit> call, Response<ResultEdit> response) {
                     if(response!=null){
                         if(response.body().getAge()==Integer.parseInt(age)&&response.body().getName().equals(name)&&response.body().getSalary()==Integer.parseInt(salary)){
+                            Log.e("reponse",response.body().toString());
                             Toast.makeText(EditEmployeeActivity.this, "Đã sửa", Toast.LENGTH_SHORT).show();
                             Intent returnIntent = new Intent();
-
+                            Bundle bundle = new Bundle();
+                            bundle.putInt("age", Integer.parseInt(age));
+                            bundle.putString("name",name);
+                            bundle.putInt("pos",getIntent().getExtras().getInt("pos"));
+                            bundle.putInt("id",getIntent().getExtras().getInt("id"));
+                            bundle.putInt("salary", Integer.parseInt(salary));
+                            returnIntent.putExtras(bundle);
+                            setResult(Activity.RESULT_OK, returnIntent);
                             finish();
                         }else {
                             Toast.makeText(EditEmployeeActivity.this, "Không thể sửa", Toast.LENGTH_SHORT).show();

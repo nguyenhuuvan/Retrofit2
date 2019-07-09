@@ -1,4 +1,4 @@
-package com.example.retrofit2;
+package com.example.retrofit2.retrofit;
 
 import com.example.retrofit2.model.Employees;
 import com.example.retrofit2.model.Request_Creat_Update;
@@ -20,6 +20,9 @@ public interface APIService {
 
     @GET("api/v1/employees")
     Call<List<Employees>> getAllEmployees();
+
+    @GET("api/v1/employee/{id}")
+    Call<Employees> getEmployee(@Path("id") int id);
 
     @POST("/api/v1/create")
     Call<ResultCreat> creatEmployee(@Body Request_Creat_Update request_creat_update);

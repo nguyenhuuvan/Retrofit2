@@ -55,4 +55,14 @@ public class ResultCreat {
     public void setId(int id) {
         this.id = id;
     }
+
+    @Override
+    public String toString() {
+        return "ResultCreat{" +
+                "name='" + name + '\'' +
+                ", salary=" + salary +
+                ", age=" + age +
+                ", id=" + id +
+                '}';
+    }
 }

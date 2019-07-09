@@ -45,7 +45,22 @@ public class EmployeeAdapter  extends RecyclerView.Adapter<EmployeeAdapter.ViewH
         View itemView = inflater.inflate(R.layout.item_employees, parent, false);
         return new ViewHolder(itemView);
     }
+    public void removeItem(int position) {
+        employeesList.remove(position);
+        notifyItemRemoved(position);
+        notifyItemRangeChanged(position, getItemCount());
+    }
+    public void replaceItem(int postion, Employees item) {
+        employeesList.remove(postion);
+        employeesList.add(postion, item);
+        notifyItemChanged(postion);
+    }
 
+
+//    public void addItem(int position, Employees item) {
+//        employeesList.add(position, item);
+//        notifyItemInserted(position);
+//    }
     @Override
     public void onBindViewHolder(@NonNull final ViewHolder holder, final int position) {
         Employees employees = employeesList.get(position);

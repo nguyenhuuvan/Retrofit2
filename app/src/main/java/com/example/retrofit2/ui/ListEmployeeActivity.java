@@ -5,41 +5,34 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.example.retrofit2.APIService;
+import com.example.retrofit2.retrofit.APIService;
 import com.example.retrofit2.R;
+import com.example.retrofit2.retrofit.APIUtils;
 import com.example.retrofit2.adapter.EmployeeAdapter;
 import com.example.retrofit2.listener.OnClick;
 import com.example.retrofit2.listener.OnDelete;
 import com.example.retrofit2.listener.OnEdit;
 import com.example.retrofit2.model.Employees;
-import com.example.retrofit2.model.Request_Creat_Update;
-import com.example.retrofit2.model.ResultCreat;
 import com.example.retrofit2.model.ResultDelete;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ListEmployeeActivity extends AppCompatActivity implements OnClick, OnDelete, OnEdit {
     private RecyclerView rvListEmployee;
@@ -47,6 +40,7 @@ public class ListEmployeeActivity extends AppCompatActivity implements OnClick, 
     private List<Employees> employeesList;
     private EmployeeAdapter employeeAdapter;
     private ProgressBar progressBar;
+    private APIService service;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,6 +48,7 @@ public class ListEmployeeActivity extends AppCompatActivity implements OnClick, 
 
         initView();
         initAction();
+        service = APIUtils.getData();
         employeesList = new ArrayList<>();
         employeeAdapter = new EmployeeAdapter(employeesList, this, this, this, this);
         rvListEmployee.setAdapter(employeeAdapter);
@@ -63,11 +58,7 @@ public class ListEmployeeActivity extends AppCompatActivity implements OnClick, 
     }
 
     private void getData() {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://dummy.restapiexample.com/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        APIService service = retrofit.create(APIService.class);
+
         Call<List<Employees>> call = service.getAllEmployees();
         call.enqueue(new Callback<List<Employees>>() {
             @Override
@@ -101,7 +92,7 @@ public class ListEmployeeActivity extends AppCompatActivity implements OnClick, 
         fabAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(ListEmployeeActivity.this,CreatEmployeeActivity.class));
+                startActivityForResult(new Intent(ListEmployeeActivity.this,CreatEmployeeActivity.class),2);
             }
         });
 
@@ -116,7 +107,9 @@ public class ListEmployeeActivity extends AppCompatActivity implements OnClick, 
 
     @Override
     public void OnClick(int pos) {
-        Toast.makeText(ListEmployeeActivity.this, "Chi tiết", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(ListEmployeeActivity.this,EmployeeActivity.class);
+        intent.putExtra("id",employeesList.get(pos).getId());
+        startActivity(intent);
     }
 
     @Override
@@ -127,18 +120,13 @@ public class ListEmployeeActivity extends AppCompatActivity implements OnClick, 
         builder.setNegativeButton("Xóa", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                Retrofit retrofit = new Retrofit.Builder()
-                        .baseUrl("http://dummy.restapiexample.com/")
-                        .addConverterFactory(GsonConverterFactory.create())
-                        .build();
-                APIService service = retrofit.create(APIService.class);
                 Call<ResultDelete> call = service.deleteEmployee(employeesList.get(pos).getId());
                 call.enqueue(new Callback<ResultDelete>() {
                     @Override
                     public void onResponse(Call<ResultDelete> call, Response<ResultDelete> response) {
                         if(response.body().getSuccess().getText().equals("successfully! deleted Records")){
                             Toast.makeText(ListEmployeeActivity.this, response.body().getSuccess().getText(), Toast.LENGTH_SHORT).show();
-
+                            employeeAdapter.removeItem(pos);
                         }
 
                     }
@@ -169,11 +157,38 @@ public class ListEmployeeActivity extends AppCompatActivity implements OnClick, 
         bundle.putString("name",employeesList.get(pos).getEmployeeName());
         bundle.putInt("salary",employeesList.get(pos).getEmployeeSalary());
 
-        //position
+        //pos
         bundle.putInt("pos",pos);
 
         intent.putExtras(bundle);
         startActivityForResult(intent,1);
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1) {
+            if (resultCode == Activity.RESULT_OK) {
+                int salary = data.getExtras().getInt("salary");
+                int age = data.getExtras().getInt("age");
+                String name = data.getExtras().getString("name");
+                int pos = data.getExtras().getInt("pos");
+                int id = data.getExtras().getInt("id");
+                employeeAdapter.replaceItem(pos,new Employees(id,name,salary,age,""));
+            }
+        }else if (requestCode == 2) {
+            if (resultCode == Activity.RESULT_OK) {
+                int salary = data.getExtras().getInt("salary");
+                int age = data.getExtras().getInt("age");
+                String name = data.getExtras().getString("name");
+                int id = data.getExtras().getInt("id");
+                employeesList.add(new Employees(id,name,salary,age,""));
+                Collections.reverse(employeesList);
+                employeeAdapter.changeDataset(employeesList);
+            }
+
+        }
 
     }
 }
